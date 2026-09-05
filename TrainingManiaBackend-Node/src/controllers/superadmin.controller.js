@@ -34,8 +34,10 @@ export async function getStats(req, res, next) {
 export async function getAdmins(req, res, next) {
   try {
     const admins = await prisma.admin.findMany({
-      where: { is_superadmin: false },
-      orderBy: { created_at: 'desc' },
+      orderBy: [
+        { is_superadmin: 'desc' },
+        { created_at: 'desc' },
+      ],
       include: {
         _count: {
           select: {
@@ -58,6 +60,7 @@ export async function getAdmins(req, res, next) {
       candidates_count: admin._count.candidates,
       trainings_count: admin._count.training_modules,
       is_active: admin.is_active,
+      is_superadmin: admin.is_superadmin,
     }));
 
     return res.status(200).json(data);

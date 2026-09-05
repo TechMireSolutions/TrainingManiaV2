@@ -387,6 +387,7 @@ const SuperAdminDashboard = () => {
                                                     <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
                                                         <td className="px-6 py-4 font-medium text-slate-900">
                                                             {admin.name}
+                                                            {admin.is_superadmin && <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full font-bold">SuperAdmin</span>}
                                                             {admin.name.includes('[Invalid Email]') && <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Invalid Email</span>}
                                                         </td>
                                                         <td className="px-6 py-4 text-slate-600">{admin.email}</td>
@@ -399,12 +400,17 @@ const SuperAdminDashboard = () => {
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <button
-                                                                onClick={() => handleDeleteAdmin(admin.id)}
-                                                                className="text-slate-400 hover:text-red-600 transition-colors p-1"
-                                                            >
-                                                                <Trash2 className="w-5 h-5" />
-                                                            </button>
+                                                            {admin.is_superadmin ? (
+                                                                <span className="text-xs text-slate-400 font-semibold italic">System Protected</span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => handleDeleteAdmin(admin.id)}
+                                                                    className="text-slate-400 hover:text-red-600 transition-colors p-1 cursor-pointer"
+                                                                    title="Delete Admin"
+                                                                >
+                                                                    <Trash2 className="w-5 h-5" />
+                                                                </button>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}
