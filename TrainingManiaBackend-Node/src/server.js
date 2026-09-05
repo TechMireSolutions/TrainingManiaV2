@@ -12,6 +12,19 @@ async function startServer() {
     await prisma.$connect();
     console.log('[Database] Connected to database successfully via Prisma.');
 
+    // Auto-seed initial administrator and production courses if database is empty
+    const adminCount = await prisma.admin.count();
+    if (adminCount === 0) {
+      console.log('[Database] Fresh database detected. Auto-seeding default administrator and training modules...');
+      try {
+        const { seedCleanData } = await import('../seed-production-data.js');
+        await seedCleanData();
+        console.log('[Database] Default administrator created: admin@trainingmania.com (Password: tms12345)');
+      } catch (seedError) {
+        console.warn('[Database] Auto-seed note:', seedError.message);
+      }
+    }
+
     const server = app.listen(PORT, () => {
       console.log(`[Server] Training Mania Node.js API running on http://localhost:${PORT}`);
       console.log(`[Server] Healthcheck: http://localhost:${PORT}/`);

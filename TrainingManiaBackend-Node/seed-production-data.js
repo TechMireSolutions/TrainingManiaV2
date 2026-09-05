@@ -482,9 +482,13 @@ Generative AI & LLMs in Production:
   console.log('================================================================\n');
 }
 
-seedCleanData()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('Error seeding data:', err);
-    process.exit(1);
-  });
+export { seedCleanData };
+
+if (process.argv[1] && process.argv[1].includes('seed-production-data')) {
+  seedCleanData()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('Error seeding data:', err);
+      process.exit(1);
+    });
+}
