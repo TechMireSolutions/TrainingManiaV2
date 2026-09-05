@@ -1,0 +1,168 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id            Int              @id @default(autoincrement())
+  email         String           @unique
+  name          String
+  password      String
+  access_code   String?
+  is_active     Boolean          @default(true)
+  is_superadmin Boolean          @default(false)
+  
+  // Quota & Tier Limits
+  training_limit   Int?
+  student_limit    Int?
+  enrollment_limit Int?
+
+  created_at    DateTime         @default(now())
+  last_login    DateTime?
+
+  training_modules TrainingModule[]
+  candidates       Candidate[]
+  notifications    Notification[]
+}
+
+model Candidate {
+  id                    Int              @id @default(autoincrement())
+  created_by_id         Int?
+  email                 String           @unique
+  name                  String           @default("")
+  student_id            String?
+  access_code           String
+  password              String?
+  method                String           @default("Manual")
+  is_active             Boolean          @default(true)
+  certificate_downloaded Boolean         @default(false)
+  created_at            DateTime         @default(now())
+
+  created_by            Admin?           @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+  enrollments           Enrollment[]
+  test_results          TestResult[]
+  chat_messages         ChatMessage[]
+}
+
+model TrainingModule {
+  id             Int                @id @default(autoincrement())
+  created_by_id  Int?
+  title          String
+  description    String?
+  pdf_file       String?
+  video_type     String             @default("youtube") // 'youtube' or 'upload'
+  video_url      String?
+  video_file     String?
+  thumbnail      String?
+  unique_code    String?            @unique
+  extracted_text String?
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
+
+  created_by     Admin?             @relation(fields: [created_by_id], references: [id], onDelete: SetNull)
+  test_configuration TestConfiguration?
+  questions      Question[]
+  enrollments    Enrollment[]
+  test_results   TestResult[]
+  chat_messages  ChatMessage[]
+}
+
+model TestConfiguration {
+  id                     Int            @id @default(autoincrement())
+  training_module_id     Int            @unique
+  total_questions        Int            @default(20)
+  mcq_percentage         Int            @default(100)
+  fib_percentage         Int            @default(0)
+  short_answer_percentage Int           @default(0)
+  total_marks            Int            @default(100)
+  passing_marks          Int            @default(40)
+  duration_minutes       Int            @default(20)
+  attempts_allowed       Int            @default(3)
+  is_negative_marking    Boolean        @default(false)
+  negative_marking_value Float          @default(0.0)
+  requires_verification  Boolean        @default(false)
+  no_copy_paste          Boolean        @default(false)
+  no_tab_switch          Boolean        @default(false)
+  no_screenshot          Boolean        @default(false)
+  exam_instructions      String?
+
+  training_module        TrainingModule @relation(fields: [training_module_id], references: [id], onDelete: Cascade)
+}
+
+model Question {
+  id                 Int            @id @default(autoincrement())
+  training_module_id Int
+  text               String
+  question_type      String         // 'mcq', 'fib', 'short_answer'
+
+  training_module    TrainingModule @relation(fields: [training_module_id], references: [id], onDelete: Cascade)
+  choices            Choice[]
+}
+
+model Choice {
+  id          Int      @id @default(autoincrement())
+  question_id Int
+  text        String
+  is_correct  Boolean  @default(false)
+
+  question    Question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id                 Int            @id @default(autoincrement())
+  candidate_id       Int
+  training_module_id Int
+  status             String         @default("Enrolled") // 'Enrolled', 'Completed', 'Failed'
+  enrolled_at        DateTime       @default(now())
+
+  candidate          Candidate      @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  training_module    TrainingModule @relation(fields: [training_module_id], references: [id], onDelete: Cascade)
+
+  @@unique([candidate_id, training_module_id])
+}
+
+model TestResult {
+  id                 Int            @id @default(autoincrement())
+  candidate_id       Int
+  training_module_id Int
+  score              Float
+  is_passed          Boolean
+  correct_count      Int
+  incorrect_count    Int
+  total_marks        Int
+  user_answers       String         @default("{}") // JSON string representation
+  date_taken         DateTime       @default(now())
+  verification_image String?
+  nic_image          String?
+  is_verified        Boolean        @default(false)
+
+  candidate          Candidate      @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  training_module    TrainingModule @relation(fields: [training_module_id], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int?
+  message    String
+  type       String   @default("system")
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  admin      Admin?   @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id                 Int            @id @default(autoincrement())
+  candidate_id       Int
+  training_module_id Int
+  sender             String         // 'user' or 'ai'
+  message            String
+  timestamp          DateTime       @default(now())
+
+  candidate          Candidate      @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  training_module    TrainingModule @relation(fields: [training_module_id], references: [id], onDelete: Cascade)
+}
