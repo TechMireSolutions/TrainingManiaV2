@@ -87,14 +87,14 @@ export async function createAdmin(req, res, next) {
     const cleanEmail = email.toLowerCase().trim();
 
     // Validate email format
-    const emailRegex = /^[\w\.-]+@[\w\.-]+\.\w+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Validate Name (Alphabets and spaces)
-    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-      return res.status(400).json({ error: 'Name must contain only letters and spaces' });
+    // Validate Name (at least 2 characters)
+    if (!name || name.trim().length < 2) {
+      return res.status(400).json({ error: 'Name must be at least 2 characters' });
     }
 
     const existing = await prisma.admin.findUnique({
@@ -105,9 +105,15 @@ export async function createAdmin(req, res, next) {
       return res.status(400).json({ error: 'Admin with this email already exists' });
     }
 
-    const tLimit = training_limit ?? trainingLimit;
-    const sLimit = student_limit ?? studentLimit;
-    const eLimit = enrollment_limit ?? enrollmentLimit;
+    const parseLimit = (v) => {
+      if (v === '' || v == null) return null;
+      const num = parseInt(v, 10);
+      return isNaN(num) || num < 0 ? null : num;
+    };
+
+    const tLimit = parseLimit(training_limit ?? trainingLimit);
+    const sLimit = parseLimit(student_limit ?? studentLimit);
+    const eLimit = parseLimit(enrollment_limit ?? enrollmentLimit);
 
     const accessCode = generateRandomAccessCode(8);
     const assignedPassword = password && password.trim() ? password.trim() : generateRandomAccessCode(10);
@@ -119,9 +125,9 @@ export async function createAdmin(req, res, next) {
         name: name.trim(),
         password: hashedPassword,
         access_code: accessCode,
-        training_limit: tLimit !== '' && tLimit != null ? parseInt(tLimit, 10) : null,
-        student_limit: sLimit !== '' && sLimit != null ? parseInt(sLimit, 10) : null,
-        enrollment_limit: eLimit !== '' && eLimit != null ? parseInt(eLimit, 10) : null,
+        training_limit: tLimit,
+        student_limit: sLimit,
+        enrollment_limit: eLimit,
         is_active: true,
         is_superadmin: false,
       },
