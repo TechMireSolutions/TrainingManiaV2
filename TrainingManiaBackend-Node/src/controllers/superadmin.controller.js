@@ -105,7 +105,14 @@ export async function createAdmin(req, res, next) {
     });
 
     if (existing) {
-      return res.status(400).json({ error: 'Admin with this email already exists' });
+      if (existing.is_superadmin) {
+        return res.status(400).json({
+          error: `"${cleanEmail}" is your SuperAdmin email. Please use a different email address for the new Admin.`,
+        });
+      }
+      return res.status(400).json({
+        error: `An Admin with email "${cleanEmail}" already exists in the system.`,
+      });
     }
 
     const parseLimit = (v) => {
@@ -194,6 +201,11 @@ export async function deleteAdmin(req, res, next) {
     if (admin.is_superadmin) {
       return res.status(403).json({ error: 'Cannot delete superadmin' });
     }
+
+    // Clean up notifications and unlink any associated candidate or training records
+    await prisma.notification.deleteMany({ where: { admin_id: adminId } });
+    await prisma.candidate.updateMany({ where: { created_by_id: adminId }, data: { created_by_id: null } });
+    await prisma.trainingModule.updateMany({ where: { created_by_id: adminId }, data: { created_by_id: null } });
 
     await prisma.admin.delete({
       where: { id: adminId },
