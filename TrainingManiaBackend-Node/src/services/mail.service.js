@@ -3,17 +3,16 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export function getTransporter() {
-  const host = process.env.EMAIL_HOST;
+  const host = process.env.EMAIL_HOST || 'mail.techmiresolutions.com';
   const port = parseInt(process.env.EMAIL_PORT || '465', 10);
-  const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+  const isSslDirect = port === 465;
   const user = process.env.EMAIL_HOST_USER || process.env.EMAIL_USER;
   const pass = process.env.EMAIL_HOST_PASSWORD || process.env.EMAIL_PASS;
 
-  if (!host || !user || !pass) {
+  if (!user || !pass) {
     return null;
   }
 
-  // Common options for standard SMTP, Gmail, SendGrid, Mailgun, AWS SES, cPanel
   const isGmail = host.toLowerCase().includes('gmail.com');
 
   const transportConfig = isGmail
@@ -21,27 +20,26 @@ export function getTransporter() {
         service: 'gmail',
         auth: {
           user,
-          pass, // Note: For Gmail, this must be a 16-character App Password (not standard account password)
+          pass,
         },
-        connectionTimeout: 8000,
-        greetingTimeout: 8000,
-        socketTimeout: 8000,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
       }
     : {
         host,
         port,
-        secure,
+        secure: isSslDirect, // true for port 465 (SSL), false for 587 / 25 (STARTTLS)
         auth: {
           user,
           pass,
         },
         tls: {
           rejectUnauthorized: false,
-          minVersion: 'TLSv1.2',
         },
-        connectionTimeout: 8000,
-        greetingTimeout: 8000,
-        socketTimeout: 8000,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
       };
 
   return nodemailer.createTransport(transportConfig);
@@ -51,14 +49,15 @@ export function getTransporter() {
  * Verify SMTP credentials and connectivity
  */
 export async function verifySmtpConnection() {
-  const host = process.env.EMAIL_HOST;
+  const host = process.env.EMAIL_HOST || 'mail.techmiresolutions.com';
+  const port = parseInt(process.env.EMAIL_PORT || '465', 10);
   const user = process.env.EMAIL_HOST_USER || process.env.EMAIL_USER;
   const pass = process.env.EMAIL_HOST_PASSWORD || process.env.EMAIL_PASS;
 
-  if (!host || !user || !pass) {
+  if (!user || !pass) {
     return {
       ok: false,
-      error: 'SMTP environment variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) are missing or empty.',
+      error: `Missing EMAIL_USER or EMAIL_PASS environment variables on ${host}:${port}.`,
     };
   }
 
@@ -68,11 +67,11 @@ export async function verifySmtpConnection() {
       return { ok: false, error: 'Could not initialize SMTP transport.' };
     }
     await transporter.verify();
-    return { ok: true, message: `SMTP connected successfully to ${host} as ${user}!` };
+    return { ok: true, message: `Connected and authenticated successfully with ${host}:${port} as ${user}!` };
   } catch (err) {
     return {
       ok: false,
-      error: `SMTP Authentication failed with server: ${err.message}`,
+      error: `SMTP server (${host}:${port}) returned: ${err.message}`,
     };
   }
 }
@@ -87,14 +86,15 @@ export async function verifySmtpConnection() {
  * @param {string|string[]} [options.bcc] - Optional BCC address
  */
 export async function sendEmail({ to, subject, text, html, bcc }) {
+  const host = process.env.EMAIL_HOST || 'mail.techmiresolutions.com';
   const user = process.env.EMAIL_HOST_USER || process.env.EMAIL_USER;
   const senderEmail = process.env.EMAIL_FROM || user || 'trainingmania@techmiresolutions.com';
   const bccAddress = bcc !== undefined ? bcc : process.env.EMAIL_BCC;
 
   const transporter = getTransporter();
   if (!transporter) {
-    console.warn('[MailService] SMTP not configured. Skipping email dispatch to:', to);
-    return { success: false, message: 'SMTP environment variables not configured' };
+    console.warn(`[MailService] SMTP credentials not supplied for ${host}. Skipping email dispatch to:`, to);
+    return { success: false, message: 'SMTP credentials not configured in environment' };
   }
 
   const mailOptions = {
