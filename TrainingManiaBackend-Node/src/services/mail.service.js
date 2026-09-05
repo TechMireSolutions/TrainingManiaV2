@@ -2,24 +2,33 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const smtpHost = process.env.EMAIL_HOST || 'mail.techmiresolutions.com';
-const smtpPort = parseInt(process.env.EMAIL_PORT || '465', 10);
-const smtpSecure = process.env.EMAIL_SECURE === 'true' || smtpPort === 465;
-const smtpUser = process.env.EMAIL_HOST_USER || process.env.EMAIL_USER || 'trainingmania@techmiresolutions.com';
-const smtpPass = process.env.EMAIL_HOST_PASSWORD || process.env.EMAIL_PASS || '!!YaHussain110!!';
+function getTransporter() {
+  const host = process.env.EMAIL_HOST;
+  const port = parseInt(process.env.EMAIL_PORT || '465', 10);
+  const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+  const user = process.env.EMAIL_HOST_USER || process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_HOST_PASSWORD || process.env.EMAIL_PASS;
 
-const transporter = nodemailer.createTransport({
-  host: smtpHost,
-  port: smtpPort,
-  secure: smtpSecure,
-  auth: {
-    user: smtpUser,
-    pass: smtpPass,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+  if (!host || !user || !pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user,
+      pass,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
+  });
+}
 
 /**
  * Send an email with optional BCC
@@ -31,8 +40,15 @@ const transporter = nodemailer.createTransport({
  * @param {string|string[]} [options.bcc] - Optional BCC address
  */
 export async function sendEmail({ to, subject, text, html, bcc }) {
-  const bccAddress = bcc !== undefined ? bcc : (process.env.EMAIL_BCC || smtpUser);
-  const senderEmail = process.env.EMAIL_FROM || smtpUser;
+  const user = process.env.EMAIL_HOST_USER || process.env.EMAIL_USER;
+  const senderEmail = process.env.EMAIL_FROM || user || 'no-reply@trainingmania.com';
+  const bccAddress = bcc !== undefined ? bcc : process.env.EMAIL_BCC;
+
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn('[MailService] SMTP not fully configured in environment variables. Skipping email dispatch.');
+    return { success: false, message: 'SMTP not configured' };
+  }
 
   const mailOptions = {
     from: `"Training Mania" <${senderEmail}>`,

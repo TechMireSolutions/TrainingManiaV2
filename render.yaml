@@ -17,7 +17,7 @@ services:
       - key: DATABASE_URL
         value: file:./dev.db
       - key: JWT_SECRET
-        value: trainingmania_secret_jwt_token_key_2026
+        generateValue: true
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: EMAIL_HOST
@@ -27,13 +27,13 @@ services:
       - key: EMAIL_SECURE
         value: "true"
       - key: EMAIL_USER
-        value: trainingmania@techmiresolutions.com
+        sync: false
       - key: EMAIL_PASS
-        value: !!YaHussain110!!
+        sync: false
       - key: EMAIL_FROM
-        value: trainingmania@techmiresolutions.com
+        sync: false
       - key: EMAIL_BCC
-        value: trainingmania@techmiresolutions.com
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
 

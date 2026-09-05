@@ -17,13 +17,13 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
       JWT_SECRET: ${JWT_SECRET:-trainingmania_secret_jwt_token_key_2026}
-      EMAIL_HOST: ${EMAIL_HOST:-mail.techmiresolutions.com}
+      EMAIL_HOST: ${EMAIL_HOST:-}
       EMAIL_PORT: ${EMAIL_PORT:-465}
       EMAIL_SECURE: ${EMAIL_SECURE:-true}
-      EMAIL_USER: ${EMAIL_USER:-trainingmania@techmiresolutions.com}
-      EMAIL_PASS: ${EMAIL_PASS:-!!YaHussain110!!}
-      EMAIL_FROM: ${EMAIL_FROM:-trainingmania@techmiresolutions.com}
-      EMAIL_BCC: ${EMAIL_BCC:-trainingmania@techmiresolutions.com}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASS: ${EMAIL_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_BCC: ${EMAIL_BCC:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "8000:8000"
