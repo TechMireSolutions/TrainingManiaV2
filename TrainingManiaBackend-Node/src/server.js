@@ -10,7 +10,7 @@ async function startServer() {
   try {
     // Verify database connection
     await prisma.$connect();
-    console.log('[Database] Connected to SQLite database successfully via Prisma.');
+    console.log('[Database] Connected to database successfully via Prisma.');
 
     const server = app.listen(PORT, () => {
       console.log(`[Server] Training Mania Node.js API running on http://localhost:${PORT}`);
