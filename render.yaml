@@ -1,0 +1,53 @@
+services:
+  # ==========================================
+  # 1. Backend API Web Service
+  # ==========================================
+  - type: web
+    name: trainingmania-backend
+    env: node
+    plan: starter
+    rootDir: TrainingManiaBackend-Node
+    buildCommand: npm install && npx prisma generate && npx prisma db push
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: JWT_SECRET
+        value: trainingmania_secret_jwt_token_key_2026
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: EMAIL_HOST
+        value: mail.techmiresolutions.com
+      - key: EMAIL_PORT
+        value: "465"
+      - key: EMAIL_SECURE
+        value: "true"
+      - key: EMAIL_USER
+        value: trainingmania@techmiresolutions.com
+      - key: EMAIL_PASS
+        value: !!YaHussain110!!
+      - key: EMAIL_FROM
+        value: trainingmania@techmiresolutions.com
+      - key: EMAIL_BCC
+        value: trainingmania@techmiresolutions.com
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # ==========================================
+  # 2. Frontend React Static Site
+  # ==========================================
+  - type: web
+    name: trainingmania-frontend
+    env: static
+    plan: starter
+    rootDir: TrainingManiafrontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
