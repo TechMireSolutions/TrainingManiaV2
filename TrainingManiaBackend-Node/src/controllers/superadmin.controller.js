@@ -377,9 +377,22 @@ export async function getTrainingEnrollments(req, res, next) {
 
 export async function checkEmailStatus(req, res, next) {
   try {
-    return res.status(200).json({ message: 'Sync complete. 0 emails marked invalid.' });
+    const { verifySmtpConnection } = await import('../services/mail.service.js');
+    const result = await verifySmtpConnection();
+
+    if (result.ok) {
+      return res.status(200).json({
+        ok: true,
+        message: `✅ ${result.message}`,
+      });
+    } else {
+      return res.status(400).json({
+        ok: false,
+        error: `❌ SMTP Status: ${result.error}`,
+      });
+    }
   } catch (error) {
-    next(error);
+    return res.status(500).json({ error: error.message });
   }
 }
 
