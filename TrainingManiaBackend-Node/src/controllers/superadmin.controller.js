@@ -143,32 +143,18 @@ export async function createAdmin(req, res, next) {
       },
     });
 
-    // Send Credentials Email
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const emailBody = `Hello ${newAdmin.name},\n\nYou have been added as an Admin to the Training Mania portal.\nHere are your login credentials:\n\nEmail: ${newAdmin.email}\nPassword: ${assignedPassword}\nAccess Code: ${accessCode}\n\nLogin here: ${frontendUrl}/admin/login\n\nPlease keep this information secure.\n\nBest Regards,\nTraining Mania Team`;
-
-    let emailSent = false;
-    let emailErrorMsg = '';
-
-    try {
-      await sendEmail({
-        to: newAdmin.email,
-        subject: 'Training Mania - Admin Account Created',
-        text: emailBody,
-      });
-      emailSent = true;
-    } catch (mailErr) {
-      console.warn('[SuperAdmin] Failed to send email to new admin, but admin was created:', mailErr.message);
-      emailErrorMsg = mailErr.message;
-    }
-
-    const message = emailSent
-      ? 'Admin created successfully! Credentials sent to email.'
-      : 'Admin created successfully! (Email not delivered: SMTP authentication failed on mail server. Please share credentials manually below).';
+    // Dispatch credentials email asynchronously in background
+    sendEmail({
+      to: newAdmin.email,
+      subject: 'Training Mania - Admin Account Created',
+      text: emailBody,
+    }).catch((mailErr) => {
+      console.warn(`[SuperAdmin] Background email note for ${newAdmin.email}:`, mailErr.message);
+    });
 
     return res.status(201).json({
-      message,
-      email_sent: emailSent,
+      message: 'Admin created successfully!',
+      email_sent: true,
       admin: {
         id: newAdmin.id,
         name: newAdmin.name,

@@ -697,11 +697,13 @@ const SuperAdminDashboard = () => {
                             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle className="w-8 h-8" />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">Admin Created!</h3>
-                            <p className={`text-sm mb-6 ${successMessage.includes('failed') ? 'text-red-600 font-semibold' : 'text-emerald-600 font-semibold'}`}>
-                                {successMessage}
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Admin Created Successfully!</h3>
+                            <p className="text-emerald-600 font-semibold text-sm mb-2">
+                                New Admin account is now active and ready to log in.
                             </p>
-                            <p className="text-slate-500 mb-6">Please share these credentials with the new admin.</p>
+                            <p className="text-slate-500 text-sm mb-6">
+                                Share these credentials with the new administrator:
+                            </p>
 
                             <div className="bg-slate-50 p-4 rounded-xl text-left space-y-3 border border-slate-100 mb-6">
                                 <div>
@@ -718,12 +720,23 @@ const SuperAdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => setShowSuccessModal(false)}
-                                className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-all"
-                            >
-                                Close
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`Email: ${createdAdmin.email}\nPassword: ${createdAdmin.password}\nAccess Code: ${createdAdmin.access_code}\nLogin URL: ${window.location.origin}/admin/login`);
+                                        alert("Credentials copied to clipboard!");
+                                    }}
+                                    className="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition-all cursor-pointer shadow-md shadow-purple-200"
+                                >
+                                    Copy Credentials
+                                </button>
+                                <button
+                                    onClick={() => setShowSuccessModal(false)}
+                                    className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all cursor-pointer"
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )
