@@ -144,10 +144,49 @@ export async function createAdmin(req, res, next) {
     });
 
     // Dispatch credentials email asynchronously in background
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const emailBody = `Hello ${newAdmin.name},\n\nYour administrator account for Training Mania has been created.\n\nHere are your login credentials:\nEmail: ${newAdmin.email}\nPassword: ${assignedPassword}\nAccess Code: ${newAdmin.access_code}\n\nYou can log in here: ${frontendUrl}/admin/login\n\nBest Regards,\nTraining Mania Team`;
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; margin: 0;">Training Mania</h2>
+          <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Admin Portal Access</p>
+        </div>
+        <p style="font-size: 15px; color: #1e293b;">Hello <strong>${newAdmin.name}</strong>,</p>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+          Your administrator account for Training Mania has been created. Here are your login credentials:
+        </p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 120px;">Email:</td>
+              <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #0f172a;">${newAdmin.email}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Password:</td>
+              <td style="padding: 6px 0; font-size: 14px; font-family: monospace; font-weight: bold; color: #0f172a;">${assignedPassword}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Access Code:</td>
+              <td style="padding: 6px 0; font-size: 16px; font-family: monospace; font-weight: bold; color: #7c3aed; letter-spacing: 1.5px;">${newAdmin.access_code}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${frontendUrl}/admin/login" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Log In to Admin Portal</a>
+        </div>
+        <p style="font-size: 13px; color: #64748b; text-align: center;">
+          Note: You can log into the portal using your account password or your Access Code.
+        </p>
+      </div>
+    `;
+
     sendEmail({
       to: newAdmin.email,
-      subject: 'Training Mania - Admin Account Created',
+      subject: 'Training Mania - Admin Account Created & Access Code',
       text: emailBody,
+      html: emailHtml,
     }).catch((mailErr) => {
       console.warn(`[SuperAdmin] Background email note for ${newAdmin.email}:`, mailErr.message);
     });
@@ -382,11 +421,84 @@ export async function checkEmailStatus(req, res, next) {
   }
 }
 
+export async function resendAdminCredentials(req, res, next) {
+  try {
+    const adminId = parseInt(req.params.id, 10);
+    const admin = await prisma.admin.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    let accessCode = admin.access_code;
+    if (!accessCode) {
+      accessCode = generateRandomAccessCode(8);
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: { access_code: accessCode },
+      });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const emailText = `Hello ${admin.name},\n\nHere is your Training Mania Administrator Access Code and login information:\n\nEmail: ${admin.email}\nAccess Code: ${accessCode}\n\nLogin here: ${frontendUrl}/admin/login\n\nYou can log into the portal using your password or your Access Code.\n\nBest Regards,\nTraining Mania Team`;
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; margin: 0;">Training Mania</h2>
+          <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Admin Portal Access</p>
+        </div>
+        <p style="font-size: 15px; color: #1e293b;">Hello <strong>${admin.name}</strong>,</p>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+          Here is your administrator access code for Training Mania:
+        </p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 120px;">Email:</td>
+              <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #0f172a;">${admin.email}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Access Code:</td>
+              <td style="padding: 6px 0; font-size: 16px; font-family: monospace; font-weight: bold; color: #7c3aed; letter-spacing: 1.5px;">${accessCode}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${frontendUrl}/admin/login" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Log In to Admin Portal</a>
+        </div>
+        <p style="font-size: 13px; color: #64748b; text-align: center;">
+          Note: You can log into the portal using your account password or your Access Code.
+        </p>
+      </div>
+    `;
+
+    const mailResult = await sendEmail({
+      to: admin.email,
+      subject: 'Training Mania - Your Admin Access Code',
+      text: emailText,
+      html: emailHtml,
+    });
+
+    return res.status(200).json({
+      ok: true,
+      message: `Access code successfully dispatched to ${admin.email}!`,
+      access_code: accessCode,
+      email_status: mailResult.success ? 'delivered' : 'queued',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export default {
   getStats,
   getAdmins,
   createAdmin,
   deleteAdmin,
+  resendAdminCredentials,
   getGlobalCandidates,
   deleteGlobalCandidate,
   getGlobalTrainings,
@@ -394,3 +506,4 @@ export default {
   getTrainingEnrollments,
   checkEmailStatus,
 };
+

@@ -13,6 +13,15 @@ function generateRandomPassword(length = 10) {
   return pass;
 }
 
+function generateRandomAccessCode(length = 8) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 /**
  * Verifies password against bcrypt or legacy Django PBKDF2 SHA256
  */
@@ -211,15 +220,59 @@ export async function adminRegister(req, res, next) {
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
+    const accessCode = generateRandomAccessCode(8);
 
     const admin = await prisma.admin.create({
       data: {
         email: cleanEmail,
         name: name.trim(),
         password: hashedPassword,
+        access_code: accessCode,
         is_superadmin: Boolean(is_superadmin),
         is_active: true,
       },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const emailText = `Hello ${admin.name},\n\nWelcome to Training Mania! Your administrator account has been created.\n\nYour Account Details:\nEmail: ${admin.email}\nAccess Code: ${admin.access_code}\n\nLog in here: ${frontendUrl}/admin/login\n\nYou can log in using either your password or your access code.\n\nBest Regards,\nTraining Mania Team`;
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; margin: 0;">Training Mania</h2>
+          <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Admin Portal Access</p>
+        </div>
+        <p style="font-size: 15px; color: #1e293b;">Hello <strong>${admin.name}</strong>,</p>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+          Welcome to Training Mania! Your administrator account is now active. Here are your credentials:
+        </p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 120px;">Email:</td>
+              <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #0f172a;">${admin.email}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Access Code:</td>
+              <td style="padding: 6px 0; font-size: 16px; font-family: monospace; font-weight: bold; color: #7c3aed; letter-spacing: 1.5px;">${admin.access_code}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${frontendUrl}/admin/login" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Log In to Admin Portal</a>
+        </div>
+        <p style="font-size: 13px; color: #64748b; text-align: center;">
+          Note: You can log into the portal using your account password or your Access Code.
+        </p>
+      </div>
+    `;
+
+    sendEmail({
+      to: admin.email,
+      subject: 'Welcome to Training Mania - Your Admin Access Code',
+      text: emailText,
+      html: emailHtml,
+    }).catch((mailErr) => {
+      console.warn(`[AdminRegister] Background email note for ${admin.email}:`, mailErr.message);
     });
 
     return res.status(201).json({
@@ -228,6 +281,7 @@ export async function adminRegister(req, res, next) {
         id: admin.id,
         name: admin.name,
         email: admin.email,
+        access_code: admin.access_code,
         is_superadmin: admin.is_superadmin,
         is_active: admin.is_active,
       },
@@ -322,24 +376,67 @@ export async function adminForgotPassword(req, res, next) {
 
     const newPassword = generateRandomPassword(10);
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    const accessCode = admin.access_code || generateRandomAccessCode(8);
 
     await prisma.admin.update({
       where: { id: admin.id },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        access_code: accessCode,
+      },
     });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const emailText = `Hello ${admin.name},\n\nYour Training Mania administrator credentials have been reset.\n\nLogin Details:\nEmail: ${admin.email}\nNew Password: ${newPassword}\nAccess Code: ${accessCode}\n\nLogin here: ${frontendUrl}/admin/login\n\nYou can log in with either your new password or your access code.\n\nBest Regards,\nTraining Mania Team`;
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #4f46e5; margin: 0;">Training Mania</h2>
+          <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Admin Portal Access</p>
+        </div>
+        <p style="font-size: 15px; color: #1e293b;">Hello <strong>${admin.name}</strong>,</p>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+          Your administrator account credentials have been reset. You can log in using either your new password or your access code below:
+        </p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b; width: 120px;">Email:</td>
+              <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #0f172a;">${admin.email}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b;">New Password:</td>
+              <td style="padding: 6px 0; font-size: 14px; font-family: monospace; font-weight: bold; color: #0f172a;">${newPassword}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-size: 14px; color: #64748b;">Access Code:</td>
+              <td style="padding: 6px 0; font-size: 16px; font-family: monospace; font-weight: bold; color: #7c3aed; letter-spacing: 1.5px;">${accessCode}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${frontendUrl}/admin/login" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Log In to Admin Portal</a>
+        </div>
+        <p style="font-size: 13px; color: #64748b; text-align: center;">
+          Note: You can log into the portal using your new password or your Access Code.
+        </p>
+      </div>
+    `;
 
     try {
       await sendEmail({
         to: admin.email,
-        subject: 'Password Reset - Training Mania',
-        text: `Hello ${admin.name},\n\nYour password has been reset.\n\nNew Password: ${newPassword}\n\nPlease login and change it immediately.`,
+        subject: 'Training Mania - Admin Password Reset & Access Code',
+        text: emailText,
+        html: emailHtml,
       });
     } catch (err) {
       console.error('[AdminForgotPassword] Email error:', err.message);
       return res.status(500).json({ error: 'Failed to send email' });
     }
 
-    return res.status(200).json({ message: 'New password sent to your email.' });
+    return res.status(200).json({ message: 'New password and access code sent to your email.' });
   } catch (error) {
     next(error);
   }

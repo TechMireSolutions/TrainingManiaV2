@@ -4,6 +4,7 @@ import {
   getAdmins,
   createAdmin,
   deleteAdmin,
+  resendAdminCredentials,
   getGlobalCandidates,
   deleteGlobalCandidate,
   getGlobalTrainings,
@@ -23,6 +24,8 @@ router.get('/superadmin/admins', getAdmins);
 router.get('/superadmin/admins/', getAdmins);
 router.post('/superadmin/admins', createAdmin);
 router.post('/superadmin/admins/', createAdmin);
+router.post('/superadmin/admins/:id/resend-code', resendAdminCredentials);
+router.post('/superadmin/admins/:id/resend-code/', resendAdminCredentials);
 router.delete('/superadmin/admins/:id', deleteAdmin);
 router.delete('/superadmin/admins/:id/', deleteAdmin);
 

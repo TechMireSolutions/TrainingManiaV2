@@ -12,7 +12,8 @@ import {
     BookOpen,
     UserCheck,
     Trash2,
-    RefreshCw
+    RefreshCw,
+    Mail
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -187,6 +188,29 @@ const SuperAdminDashboard = () => {
         } catch (err) {
             console.error(err);
             alert("Error deleting admin");
+        }
+    };
+
+    const [sendingCodeId, setSendingCodeId] = useState(null);
+
+    const handleResendCode = async (adminId, adminEmail) => {
+        setSendingCodeId(adminId);
+        try {
+            const res = await fetch(`/api/superadmin/admins/${adminId}/resend-code/`, {
+                method: 'POST',
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`✅ ${data.message}`);
+                fetchData();
+            } else {
+                alert(`❌ Failed: ${data.error || 'Could not resend access code'}`);
+            }
+        } catch (err) {
+            console.error('Error resending access code:', err);
+            alert(`Network error: ${err.message}`);
+        } finally {
+            setSendingCodeId(null);
         }
     };
 
@@ -403,13 +427,27 @@ const SuperAdminDashboard = () => {
                                                             {admin.is_superadmin ? (
                                                                 <span className="text-xs text-slate-400 font-semibold italic">System Protected</span>
                                                             ) : (
-                                                                <button
-                                                                    onClick={() => handleDeleteAdmin(admin.id)}
-                                                                    className="text-slate-400 hover:text-red-600 transition-colors p-1 cursor-pointer"
-                                                                    title="Delete Admin"
-                                                                >
-                                                                    <Trash2 className="w-5 h-5" />
-                                                                </button>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => handleResendCode(admin.id, admin.email)}
+                                                                        disabled={sendingCodeId === admin.id}
+                                                                        className="text-slate-400 hover:text-purple-600 transition-colors p-1 cursor-pointer disabled:opacity-50"
+                                                                        title="Resend Access Code via Email"
+                                                                    >
+                                                                        {sendingCodeId === admin.id ? (
+                                                                            <Loader className="w-5 h-5 animate-spin text-purple-600" />
+                                                                        ) : (
+                                                                            <Mail className="w-5 h-5" />
+                                                                        )}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteAdmin(admin.id)}
+                                                                        className="text-slate-400 hover:text-red-600 transition-colors p-1 cursor-pointer"
+                                                                        title="Delete Admin"
+                                                                    >
+                                                                        <Trash2 className="w-5 h-5" />
+                                                                    </button>
+                                                                </div>
                                                             )}
                                                         </td>
                                                     </tr>
