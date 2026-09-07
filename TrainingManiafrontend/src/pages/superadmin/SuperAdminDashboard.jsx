@@ -276,6 +276,7 @@ const SuperAdminDashboard = () => {
         </button>
     );
 
+    return (
         <div className="h-screen h-[100dvh] bg-slate-50 flex font-sans overflow-hidden text-slate-900">
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
@@ -375,61 +376,125 @@ const SuperAdminDashboard = () => {
                             {/* ADMINS TAB */}
                             {activeTab === 'admins' && (
                                 <div className="space-y-4 sm:space-y-6">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+                                    <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end sm:gap-3">
                                         <button
                                             onClick={handleCheckEmails}
                                             disabled={loadingEmails}
-                                            className="w-full sm:w-auto justify-center bg-white text-slate-600 border border-slate-200 px-4 py-2.5 rounded-xl font-bold flex items-center hover:bg-slate-50 transition-all shadow-sm text-sm"
+                                            className="w-full sm:w-auto justify-center bg-white text-slate-700 border border-slate-200 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold flex items-center hover:bg-slate-50 transition-all shadow-sm text-xs sm:text-sm cursor-pointer"
                                         >
-                                            <RefreshCw className={`w-4 h-4 mr-2 ${loadingEmails ? 'animate-spin' : ''}`} />
-                                            {loadingEmails ? 'Checking...' : 'Check Email Status'}
+                                            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 ${loadingEmails ? 'animate-spin' : ''}`} />
+                                            <span className="truncate">{loadingEmails ? 'Checking...' : 'Check Status'}</span>
                                         </button>
                                         <button
                                             onClick={() => setShowAddAdminModal(true)}
-                                            className="w-full sm:w-auto justify-center bg-purple-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 text-sm"
+                                            className="w-full sm:w-auto justify-center bg-purple-600 text-white px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold flex items-center hover:bg-purple-700 transition-all shadow-md shadow-purple-200 text-xs sm:text-sm cursor-pointer"
                                         >
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Add New Admin
+                                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                                            <span className="truncate">Add Admin</span>
                                         </button>
                                     </div>
 
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                                        <div className="md:hidden px-4 py-2 bg-slate-50 border-b border-slate-100 text-xs text-slate-400 flex items-center justify-between">
-                                            <span>← Swipe table horizontally to see all columns →</span>
+                                        {/* MOBILE CARD VIEW (< md) */}
+                                        <div className="md:hidden divide-y divide-slate-100">
+                                            {admins.map(admin => (
+                                                <div key={admin.id} className="p-4 space-y-3 bg-white hover:bg-slate-50/50 transition-colors">
+                                                    {/* Header: Name, Badges & Status */}
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                <span className="font-bold text-slate-900 text-sm sm:text-base">{admin.name}</span>
+                                                                {admin.is_superadmin && (
+                                                                    <span className="text-[11px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">SuperAdmin</span>
+                                                                )}
+                                                                {admin.name.includes('[Invalid Email]') && (
+                                                                    <span className="text-[11px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Invalid Email</span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs text-slate-500 font-normal break-all mt-0.5 select-all">{admin.email}</p>
+                                                        </div>
+                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${admin.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                            {admin.is_active ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Info Grid: Access Code & Counts */}
+                                                    <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100">
+                                                        <div>
+                                                            <span className="text-slate-400 block text-[11px]">Access Code</span>
+                                                            <span className="font-mono font-bold text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-100 inline-block mt-0.5">
+                                                                {admin.access_code || '-'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-col justify-center text-right">
+                                                            <span className="text-slate-700 font-semibold">{admin.trainings_count || 0} Modules</span>
+                                                            <span className="text-slate-500 text-[11px]">{admin.candidates_count || 0} Candidates</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Actions */}
+                                                    {!admin.is_superadmin ? (
+                                                        <div className="flex items-center gap-2 pt-1">
+                                                            <button
+                                                                onClick={() => handleResendCode(admin.id, admin.email)}
+                                                                disabled={sendingCodeId === admin.id}
+                                                                className="flex-1 py-2 px-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                                                            >
+                                                                {sendingCodeId === admin.id ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                                                                Resend Code
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteAdmin(admin.id)}
+                                                                className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-[11px] text-slate-400 italic font-medium pt-0.5">System Protected Administrator</div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {admins.length === 0 && (
+                                                <div className="p-8 text-center text-slate-500 text-sm">No active admins found.</div>
+                                            )}
                                         </div>
-                                        <div className="overflow-x-auto overscroll-x-contain">
-                                            <table className="w-full min-w-[760px] text-left border-collapse">
+
+                                        {/* DESKTOP TABLE VIEW (>= md) */}
+                                        <div className="hidden md:block overflow-x-auto overscroll-x-contain">
+                                            <table className="w-full text-left border-collapse">
                                                 <thead className="bg-slate-50 border-b border-slate-200">
                                                     <tr>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Name</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Email</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Access Code</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Training Modules</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Candidates</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Status</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Actions</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Name</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Email</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Access Code</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Training Modules</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Candidates</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Status</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
                                                     {admins.map(admin => (
                                                         <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4 font-medium text-slate-900">
+                                                            <td className="px-6 py-4 font-medium text-slate-900">
                                                                 <div className="flex items-center flex-wrap gap-1.5">
                                                                     <span>{admin.name}</span>
                                                                     {admin.is_superadmin && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">SuperAdmin</span>}
                                                                     {admin.name.includes('[Invalid Email]') && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Invalid Email</span>}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{admin.email}</td>
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4 font-mono font-bold text-purple-600 text-sm">{admin.access_code || '-'}</td>
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{admin.trainings_count}</td>
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{admin.candidates_count}</td>
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4">
+                                                            <td className="px-6 py-4 text-slate-600 text-sm">{admin.email}</td>
+                                                            <td className="px-6 py-4 font-mono font-bold text-purple-600 text-sm">{admin.access_code || '-'}</td>
+                                                            <td className="px-6 py-4 text-slate-600 text-sm">{admin.trainings_count}</td>
+                                                            <td className="px-6 py-4 text-slate-600 text-sm">{admin.candidates_count}</td>
+                                                            <td className="px-6 py-4">
                                                                 <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${admin.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                                                                     {admin.is_active ? 'Active' : 'Inactive'}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 sm:px-6 py-3.5 sm:py-4">
+                                                            <td className="px-6 py-4">
                                                                 {admin.is_superadmin ? (
                                                                     <span className="text-xs text-slate-400 font-semibold italic">System Protected</span>
                                                                 ) : (
@@ -524,34 +589,95 @@ const SuperAdminDashboard = () => {
                                     </div>
 
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                                        <div className="md:hidden px-4 py-2 bg-slate-50 border-b border-slate-100 text-xs text-slate-400 flex items-center justify-between">
-                                            <span>← Swipe table horizontally to see all columns →</span>
+                                        {/* MOBILE CARD VIEW (< md) */}
+                                        <div className="md:hidden divide-y divide-slate-100">
+                                            {loadingCandidates ? (
+                                                <div className="p-8 text-center text-slate-500"><Loader className="w-6 h-6 animate-spin mx-auto text-purple-600" /></div>
+                                            ) : (selectedTrainingFilter && filteredCandidates ? filteredCandidates : candidates).length > 0 ? (
+                                                (selectedTrainingFilter && filteredCandidates ? filteredCandidates : candidates).map(candidate => {
+                                                    const candidateName = candidate.name || candidate.email.split('@')[0].replace(/[0-9]/g, '').replace(/_/g, ' ').replace(/\./g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                                                    const dateStr = (selectedTrainingFilter ? candidate.enrolled_at : candidate.created_at) ? new Date(selectedTrainingFilter ? candidate.enrolled_at : candidate.created_at).toLocaleDateString() : '-';
+                                                    return (
+                                                        <div key={candidate.id} className="p-4 space-y-3 bg-white hover:bg-slate-50/50 transition-colors">
+                                                            {/* Header: Name and Status */}
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="min-w-0 flex-1">
+                                                                    <h4 className="font-bold text-slate-900 text-sm sm:text-base">{candidateName}</h4>
+                                                                    <p className="text-xs text-slate-500 break-all select-all mt-0.5">{candidate.email}</p>
+                                                                </div>
+                                                                {selectedTrainingFilter && candidate.status && (
+                                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0 ${candidate.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                                        {candidate.status}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Course Info */}
+                                                            {!selectedTrainingFilter && (
+                                                                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                                                    <span className="text-[11px] text-slate-400 block mb-1 font-medium">Enrolled Courses:</span>
+                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                        {candidate.enrolled_courses && candidate.enrolled_courses.length > 0 ? (
+                                                                            candidate.enrolled_courses.map((course, idx) => (
+                                                                                <span key={idx} className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md text-xs font-semibold border border-indigo-100">
+                                                                                    {course}
+                                                                                </span>
+                                                                            ))
+                                                                        ) : (
+                                                                            <span className="text-slate-400 text-xs italic">No courses enrolled</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Footer: Date & Delete */}
+                                                            <div className="flex items-center justify-between pt-1 border-t border-slate-50 text-xs text-slate-500">
+                                                                <span>{selectedTrainingFilter ? 'Enrolled:' : 'Added:'} {dateStr}</span>
+                                                                <button
+                                                                    onClick={() => handleDeleteCandidate(candidate.id)}
+                                                                    className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                                                                    title="Delete Candidate"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5 mr-0.5" />
+                                                                    <span>Delete</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="p-8 text-center text-slate-500 text-sm">
+                                                    No candidates found {selectedTrainingFilter ? 'in this course' : ''}.
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="overflow-x-auto overscroll-x-contain">
-                                            <table className="w-full min-w-[700px] text-left border-collapse">
+
+                                        {/* DESKTOP TABLE VIEW (>= md) */}
+                                        <div className="hidden md:block overflow-x-auto overscroll-x-contain">
+                                            <table className="w-full text-left border-collapse">
                                                 <thead className="bg-slate-50 border-b border-slate-200">
                                                     <tr>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Name</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Email</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">{selectedTrainingFilter ? 'Status' : 'Enrolled Courses'}</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">{selectedTrainingFilter ? 'Enrolled At' : 'Created At'}</th>
-                                                        <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Actions</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Name</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Email</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">{selectedTrainingFilter ? 'Status' : 'Enrolled Courses'}</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">{selectedTrainingFilter ? 'Enrolled At' : 'Created At'}</th>
+                                                        <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
                                                     {loadingCandidates ? (
-                                                        <tr><td colSpan="5" className="p-8 text-center text-slate-500"><Loader className="w-6 h-6 animate-spin mx-auto" /></td></tr>
+                                                        <tr><td colSpan="5" className="p-8 text-center text-slate-500"><Loader className="w-6 h-6 animate-spin mx-auto text-purple-600" /></td></tr>
                                                     ) : (selectedTrainingFilter && filteredCandidates ? filteredCandidates : candidates).length > 0 ? (
                                                         (selectedTrainingFilter && filteredCandidates ? filteredCandidates : candidates).map(candidate => (
                                                             <tr key={candidate.id} className="hover:bg-slate-50 transition-colors">
-                                                                <td className="px-4 sm:px-6 py-3.5 sm:py-4 font-medium text-slate-900 text-sm">
+                                                                <td className="px-6 py-4 font-medium text-slate-900 text-sm">
                                                                     {candidate.name || candidate.email.split('@')[0].replace(/[0-9]/g, '').replace(/_/g, ' ').replace(/\./g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                                                                 </td>
-                                                                <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{candidate.email}</td>
+                                                                <td className="px-6 py-4 text-slate-600 text-sm">{candidate.email}</td>
 
                                                                 {/* Course Info Column */}
                                                                 {selectedTrainingFilter ? (
-                                                                    <td className="px-4 sm:px-6 py-3.5 sm:py-4">
+                                                                    <td className="px-6 py-4">
                                                                         {candidate.status ? (
                                                                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${candidate.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                                                                                 {candidate.status}
@@ -561,7 +687,7 @@ const SuperAdminDashboard = () => {
                                                                         )}
                                                                     </td>
                                                                 ) : (
-                                                                    <td className="px-4 sm:px-6 py-3.5 sm:py-4">
+                                                                    <td className="px-6 py-4">
                                                                         <div className="flex flex-wrap gap-1.5">
                                                                             {candidate.enrolled_courses && candidate.enrolled_courses.length > 0 ? (
                                                                                 candidate.enrolled_courses.map((course, idx) => (
@@ -576,10 +702,10 @@ const SuperAdminDashboard = () => {
                                                                     </td>
                                                                 )}
 
-                                                                <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">
+                                                                <td className="px-6 py-4 text-slate-600 text-sm">
                                                                     {(selectedTrainingFilter ? candidate.enrolled_at : candidate.created_at) ? new Date(selectedTrainingFilter ? candidate.enrolled_at : candidate.created_at).toLocaleDateString() : '-'}
                                                                 </td>
-                                                                <td className="px-4 sm:px-6 py-3.5 sm:py-4">
+                                                                <td className="px-6 py-4">
                                                                     <button
                                                                         onClick={() => handleDeleteCandidate(candidate.id)}
                                                                         className="text-slate-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
@@ -607,28 +733,58 @@ const SuperAdminDashboard = () => {
                             {/* GLOBAL TRAININGS TAB */}
                             {activeTab === 'trainings' && (
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                                    <div className="md:hidden px-4 py-2 bg-slate-50 border-b border-slate-100 text-xs text-slate-400 flex items-center justify-between">
-                                        <span>← Swipe table horizontally to see all columns →</span>
+                                    {/* MOBILE CARD VIEW (< md) */}
+                                    <div className="md:hidden divide-y divide-slate-100">
+                                        {trainings.map(t => (
+                                            <div key={t.id} className="p-4 space-y-3 bg-white hover:bg-slate-50/50 transition-colors">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <h4 className="font-bold text-slate-900 text-sm sm:text-base">{t.title}</h4>
+                                                        <p className="text-xs text-slate-500 mt-0.5">By: <span className="font-medium text-slate-700">{t.created_by}</span></p>
+                                                    </div>
+                                                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 flex-shrink-0">
+                                                        {t.questions_count} Qs
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center justify-between pt-1 border-t border-slate-50 text-xs text-slate-500">
+                                                    <span>Created: {new Date(t.created_at).toLocaleDateString()}</span>
+                                                    <button
+                                                        onClick={() => handleDeleteTraining(t.id)}
+                                                        className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                                                        title="Delete Training"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5 mr-0.5" />
+                                                        <span>Delete</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {trainings.length === 0 && (
+                                            <div className="p-8 text-center text-slate-500 text-sm">No trainings found.</div>
+                                        )}
                                     </div>
-                                    <div className="overflow-x-auto overscroll-x-contain">
-                                        <table className="w-full min-w-[640px] text-left border-collapse">
+
+                                    {/* DESKTOP TABLE VIEW (>= md) */}
+                                    <div className="hidden md:block overflow-x-auto overscroll-x-contain">
+                                        <table className="w-full text-left border-collapse">
                                             <thead className="bg-slate-50 border-b border-slate-200">
                                                 <tr>
-                                                    <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Title</th>
-                                                    <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Created By</th>
-                                                    <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Questions</th>
-                                                    <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Date</th>
-                                                    <th className="px-4 sm:px-6 py-3.5 sm:py-4 font-semibold text-slate-700 text-sm">Actions</th>
+                                                    <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Title</th>
+                                                    <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Created By</th>
+                                                    <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Questions</th>
+                                                    <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Date</th>
+                                                    <th className="px-6 py-4 font-semibold text-slate-700 text-sm">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {trainings.map(t => (
                                                     <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                                                        <td className="px-4 sm:px-6 py-3.5 sm:py-4 font-medium text-slate-900 text-sm">{t.title}</td>
-                                                        <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{t.created_by}</td>
-                                                        <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{t.questions_count}</td>
-                                                        <td className="px-4 sm:px-6 py-3.5 sm:py-4 text-slate-600 text-sm">{new Date(t.created_at).toLocaleDateString()}</td>
-                                                        <td className="px-4 sm:px-6 py-3.5 sm:py-4">
+                                                        <td className="px-6 py-4 font-medium text-slate-900 text-sm">{t.title}</td>
+                                                        <td className="px-6 py-4 text-slate-600 text-sm">{t.created_by}</td>
+                                                        <td className="px-6 py-4 text-slate-600 text-sm">{t.questions_count}</td>
+                                                        <td className="px-6 py-4 text-slate-600 text-sm">{new Date(t.created_at).toLocaleDateString()}</td>
+                                                        <td className="px-6 py-4">
                                                             <button
                                                                 onClick={() => handleDeleteTraining(t.id)}
                                                                 className="text-slate-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
