@@ -12,12 +12,28 @@
   color: #0f172a;
 }
 
+html,
 body {
   margin: 0;
-  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
 }
+
+/* Touch and scroll container optimizations */
+.overscroll-y-contain {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overscroll-x-contain {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 
 /* Smooth transitions for all interactive elements */
 button,

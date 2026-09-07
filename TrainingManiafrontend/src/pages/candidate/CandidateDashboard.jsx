@@ -243,10 +243,10 @@ const CandidateDashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         {hasAttempts && activeTab !== 'player' && (
-          <div className="flex border-b border-slate-200 mb-8">
+          <div className="flex border-b border-slate-200 mb-8 overflow-x-auto overscroll-x-contain">
             <button
               onClick={() => setActiveTab('my-courses')}
-              className={`px-6 py-3 font-bold text-sm transition-all border-b-2 cursor-pointer ${activeTab === 'my-courses' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              className={`px-4 sm:px-6 py-3 font-bold text-sm transition-all border-b-2 whitespace-nowrap cursor-pointer ${activeTab === 'my-courses' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
             >
               My Courses
             </button>
@@ -382,7 +382,13 @@ const CandidateDashboard = () => {
 
         {activeTab === 'results' && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <table className="w-full text-left">
+            {/* Mobile Swipe Hint */}
+            <div className="px-4 py-2 bg-indigo-50/60 text-indigo-700 text-xs text-center border-b border-indigo-100/60 sm:hidden flex items-center justify-center gap-1.5 font-medium">
+              <span>←</span> Swipe table horizontally to see all columns <span>→</span>
+            </div>
+
+            <div className="overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[620px] text-left">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 text-sm font-bold text-slate-700">Training Module</th>
@@ -425,6 +431,7 @@ const CandidateDashboard = () => {
               </tbody>
             </table>
           </div>
+        </div>
         )}
 
         {activeTab === 'player' && currentCourse && (

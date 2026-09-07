@@ -425,8 +425,13 @@ const CandidateRegistration = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        {/* Mobile Swipe Hint */}
+        <div className="px-4 py-2 bg-indigo-50/60 text-indigo-700 text-xs text-center border-b border-indigo-100/60 sm:hidden flex items-center justify-center gap-1.5 font-medium">
+          <span>←</span> Swipe table horizontally to see all columns <span>→</span>
+        </div>
+
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full min-w-[720px] text-left">
             <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
               <tr>
                 <th className="px-6 py-4">Candidate</th>

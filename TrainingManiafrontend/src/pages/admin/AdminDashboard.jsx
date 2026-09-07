@@ -79,7 +79,7 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="h-screen bg-slate-50 flex font-sans overflow-hidden text-slate-900">
+    <div className="h-screen h-[100dvh] bg-slate-50 flex font-sans overflow-hidden text-slate-900">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
@@ -132,26 +132,26 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full w-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full w-full overflow-hidden min-w-0">
         {/* Top Header */}
-        <header className="bg-white/80 backdrop-blur-md z-20 border-b border-slate-200 px-4 md:px-8 py-4 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="bg-white/80 backdrop-blur-md z-20 border-b border-slate-200 px-4 md:px-8 py-3.5 sm:py-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden text-slate-500 hover:text-indigo-600 cursor-pointer"
+              className="md:hidden text-slate-500 hover:text-indigo-600 cursor-pointer p-1 -ml-1"
             >
               <Menu className="w-6 h-6" />
             </button>
             <div className="flex-1"></div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none cursor-pointer"
               >
-                <Bell className="w-6 h-6" />
+                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
                 {notifications.length > 0 && (
                   <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 )}
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
 
               {/* Notification Dropdown */}
               {showNotifications && (
-                <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                     <h3 className="font-bold text-slate-900 text-sm">Notifications</h3>
                     <button onClick={() => setNotifications([])} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors cursor-pointer">Mark all read</button>
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
+            <div className="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-6 border-l border-slate-200">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-slate-900">
                   {JSON.parse(localStorage.getItem('adminInfo'))?.email.split('@')[0].replace(/[0-9]/g, '').replace(/[\._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Admin User'}
@@ -195,7 +195,7 @@ const AdminDashboard = () => {
                   {JSON.parse(localStorage.getItem('adminInfo'))?.is_superadmin ? 'Super Admin' : 'Admin'}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm text-sm sm:text-base">
                 {(JSON.parse(localStorage.getItem('adminInfo'))?.email?.charAt(0).toUpperCase()) || 'A'}
               </div>
             </div>
@@ -203,7 +203,7 @@ const AdminDashboard = () => {
         </header>
 
         {/* Dashboard Content */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-y-auto overscroll-y-contain min-w-0">
           {activeTab === 'new-training' ? (
             <NewTraining />
           ) : activeTab === 'modules' ? (
